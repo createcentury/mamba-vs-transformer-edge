@@ -1,0 +1,33 @@
+{
+  "completed" : true,
+  "decodeSecondsPerToken" : 0.03446260094642639,
+  "decodeTokens" : 40,
+  "device" : "arm64",
+  "framework" : "mamba-metal-swift",
+  "killedByJetsam" : false,
+  "loadSeconds" : 0.2420569658279419,
+  "memoryAfterLoad" : {
+    "physFootprintMB" : 537.5947113037109,
+    "residentMB" : 562.4375,
+    "timestamp" : 1778876895.045443,
+    "virtualMB" : 425735.125
+  },
+  "memoryBefore" : {
+    "physFootprintMB" : 2.6254119873046875,
+    "residentMB" : 15.90625,
+    "timestamp" : 1778876894.803379,
+    "virtualMB" : 425134.703125
+  },
+  "memoryPeak" : {
+    "physFootprintMB" : 1489.6729278564453,
+    "residentMB" : 573.53125,
+    "timestamp" : 1778876897.1706429,
+    "virtualMB" : 426560.59375
+  },
+  "model" : "state-spaces\/mamba-130m-hf",
+  "note" : "tracker.availableMBMin not collected on macOS",
+  "os" : "macOS",
+  "output" : " Tokyo, Japan.\n\nThe city is located in the northern part of the country, and is the capital of the Japanese state of Japan. It is located in the northern part of the country,",
+  "prefillSeconds" : 0.7461661100387573,
+  "promptTokens" : 5
+}
