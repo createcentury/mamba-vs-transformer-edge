@@ -1,0 +1,31 @@
+{
+  "device" : "iPhone Air (iPhone18,4)",
+  "framework" : "mlx-swift-lm",
+  "model" : "mlx-community\/SmolLM-135M-Instruct-4bit",
+  "prompt" : "The capital of Japan is",
+  "promptTokens" : -1,
+  "runs" : [
+    {
+      "fast" : true,
+      "maxTokens" : 50,
+      "physFootprintMBPeak" : 147.48545837402344,
+      "tokensPerSec" : 299.2434555048529,
+      "totalSeconds" : 0.16708803176879883
+    },
+    {
+      "fast" : true,
+      "maxTokens" : 200,
+      "physFootprintMBPeak" : 148.98543548583984,
+      "tokensPerSec" : 420.98615433333885,
+      "totalSeconds" : 0.47507500648498535
+    },
+    {
+      "fast" : true,
+      "maxTokens" : 400,
+      "physFootprintMBPeak" : 168.76670837402344,
+      "tokensPerSec" : 366.5510972467619,
+      "totalSeconds" : 1.0912530422210693
+    }
+  ],
+  "timestamp" : "2026-05-15T20:58:55Z"
+}
