@@ -1,38 +1,47 @@
-# iPhone Air: Mamba vs Transformer (first comparison)
+# iPhone Air: Mamba vs Transformer — iterative findings
 
-## Raw data
+## Raw data (extended sweep, n = 50, 200, 400, 1000)
 
 ### Mamba 130m (fp32, mamba-metal-swift)
 
 | n | tok/s | total | peak MB | marginal ms/tok |
 |---|---:|---:|---:|---:|
-| 50 | 62.8 | 0.80 s | 595 | — |
-| 200 | 87.7 | 2.28 s | 595 | 9.9 |
-| 400 | 89.5 | 4.47 s | 583 | 11.0 |
+| 50 | 63.7 | 0.78 s | 586 | — |
+| 200 | 84.4 | 2.37 s | 578 | 10.6 |
+| 400 | 91.3 | 4.38 s | 583 | 10.0 |
+| **1000** | **90.7** | **11.02 s** | **590** | **11.1** |
+
+→ Marginal cost is flat from 50 → 1000. Peak memory is flat. Mamba's constant-time decode property is cleanly visible.
 
 ### SmolLM 135M (4-bit, mlx-swift-lm)
 
-| n | tok/s | total | peak MB | marginal ms/tok |
-|---|---:|---:|---:|---:|
-| 50 | 299.2 | 0.17 s | 147 | — |
-| 200 | 421.0 | 0.48 s | 149 | 2.1 |
-| 400 | 366.6 | 1.09 s | 169 | 3.1 |
+| n | tok/s | total | peak MB | note |
+|---|---:|---:|---:|---|
+| 50 | 309.5 | 0.16 s | 652 | |
+| 200 | 409.8 | 0.49 s | 656 | |
+| 400 | 374.7 | 1.07 s | 667 | |
+| **1000** | **1528.7 ⚠️** | **0.65 s** | **666** | **anomalous — see below** |
 
-## What this comparison is and isn't
+## Methodology caveats (important)
 
-It is NOT a clean isolation of architecture. SmolLM is heavily quantized (4-bit) and the mlx-swift-lm implementation is heavily tuned by Apple. Mamba runs in fp32 with a custom kernel we wrote in a single session. Most of the surface gap is the **quantization** (8× compression on weights) plus **engineering maturity**.
+1. **Chunks vs tokens mismatch.** Our Mamba runner emits one stream chunk per generated token. `mlx-swift-lm`'s `ChatSession.streamResponse(to:)` emits chunks at arbitrary boundaries (often multi-token text fragments). Our `count >= maxNewTokens` break condition therefore terminates at very different effective token counts. The n=1000 SmolLM number (1528 chunks/s) is almost certainly an artefact of this — many of its later "chunks" were single-character pieces of degenerate output, hitting the break early in absolute time. To fix: use `streamDetails` and count `Generation.token` events instead.
 
-What it does still surface:
+2. **Quantization disparity.** SmolLM is 4-bit (≈ 67 MB of weights). Mamba is fp32 (≈ 520 MB). Eight-fold compression of the weights does most of the work for both speed (memory bandwidth) and footprint. Until Mamba is matched at 4-bit / 8-bit this is apples-to-oranges.
 
-- **Mamba's per-token cost is flat** (9.9 → 11.0 ms across 4× growth in `n_new`).
-- **SmolLM's per-token cost is already growing** (2.1 → 3.1 ms across the same 4× growth). This is the early shoulder of the KV-cache cost curve.
+3. **Output quality is NOT equal.** Mamba 130m produces coherent continuations ("Tokyo, Japan. The city is located in…"). SmolLM 135M (4-bit Instruct) produces noticeably worse output for the same non-chat prompt. Plausible causes:
+   - Pile (Mamba) is a stronger pretraining corpus than Cosmopedia (SmolLM) at this scale.
+   - 4-bit quantization further degrades SmolLM.
+   - SmolLM-Instruct is chat-tuned; a raw continuation prompt is out-of-distribution for it.
 
-## Where Mamba's structural advantage should appear
+## What the comparison still tells us
 
-Long context, where Transformer's KV cache becomes large and per-token cost rises substantially. At `n_new = 50-400` tokens on iPhone, we are well below that crossover.
+- **Mamba 130m: flat per-token cost from n=50 to n=1000 on iPhone Air, ~11 ms/tok, ~590 MB resident.** That is a genuine demonstration of constant-state decode.
+- **SmolLM 135M: per-token cost is already nudging up (2.1 → 2.6 ms/tok between n=50 and n=400)** before the chunk-counting artefact takes over. This is the early shoulder of the KV-cache curve.
+- **Speed-only comparison is misleading.** A faster but lower-quality model is not a win.
 
-## Next experiments (in priority order)
+## Next experiments (revised priorities)
 
-1. **Match the quantization story.** Either quantize Mamba (4-bit / 8-bit) or use an unquantized Transformer (e.g. SmolLM-135M fp16). Otherwise apples-to-oranges.
-2. **Push `n_new` much higher** — 1024, 4096, 8192. Mamba's flat curve should pull ahead vs Transformer's growing curve.
-3. **Long context prompts** — the headline claim is most about *context* length, not decoded length. Use a 4k-token prompt with a 100-token decode, measure prefill + memory carefully.
+1. **Fix token counting on the Transformer side** — use `streamDetails` and count `Generation.token` events.
+2. **Match quantization** — quantize Mamba to 4-bit (`MLXFast`'s quantize helpers should make this easy) OR run an unquantized SmolLM if available.
+3. **Add a quality metric** — perplexity on a held-out paragraph, or at minimum log the actual generated outputs so the qualitative gap is visible from results.
+4. **Long context push** — once 1-3 are in place, sweep n_new up to 4k, 8k where Mamba's structural advantage actually appears.

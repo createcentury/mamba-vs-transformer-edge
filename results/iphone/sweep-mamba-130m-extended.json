@@ -1,0 +1,38 @@
+{
+  "device" : "iPhone Air (iPhone18,4)",
+  "framework" : "mamba-metal-swift",
+  "model" : "state-spaces\/mamba-130m-hf",
+  "prompt" : "The capital of Japan is",
+  "promptTokens" : 5,
+  "runs" : [
+    {
+      "fast" : true,
+      "maxTokens" : 50,
+      "physFootprintMBPeak" : 585.6732330322266,
+      "tokensPerSec" : 63.69605002252891,
+      "totalSeconds" : 0.7849780321121216
+    },
+    {
+      "fast" : true,
+      "maxTokens" : 200,
+      "physFootprintMBPeak" : 578.1576080322266,
+      "tokensPerSec" : 84.35696903686066,
+      "totalSeconds" : 2.3708770275115967
+    },
+    {
+      "fast" : true,
+      "maxTokens" : 400,
+      "physFootprintMBPeak" : 582.5794830322266,
+      "tokensPerSec" : 91.29408115665613,
+      "totalSeconds" : 4.381445050239563
+    },
+    {
+      "fast" : true,
+      "maxTokens" : 1000,
+      "physFootprintMBPeak" : 590.4544830322266,
+      "tokensPerSec" : 90.74193538930699,
+      "totalSeconds" : 11.020263075828552
+    }
+  ],
+  "timestamp" : "2026-05-15T21:02:11Z"
+}
